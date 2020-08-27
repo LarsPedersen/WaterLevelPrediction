@@ -19,6 +19,10 @@ The classification system was a set of percentage categories from 0% to 100% wit
 So basically a lot of water tank pictures with different water levels and lightings need to be uploaded and classified by adding the the percentage categories. Once this is done the model can be trained and the used.
 
 ## ESC32 setup
+To be described.
 
 ## .NET Core Service Worker
+To be described.
 
+## Architecture
+To be described.
