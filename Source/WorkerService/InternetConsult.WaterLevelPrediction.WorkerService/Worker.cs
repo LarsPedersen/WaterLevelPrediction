@@ -24,7 +24,7 @@ namespace InternetConsult.WaterLevelPrediction.WorkerService
         private readonly string _photoWebServerBaseUrl;
         private readonly int _workerDelaySecs;
         private readonly string _tempFolderPath;
-        private readonly int _sunriseThresholdMinutes;
+        private readonly int _twilightThresholdMinutes;
         private readonly ISunriseService _sunriseService;
 
         public Worker(ILogger<Worker> logger, IConfiguration configuration, IMemoryCache memoryCache, ISunriseService sunriseService)
@@ -37,7 +37,7 @@ namespace InternetConsult.WaterLevelPrediction.WorkerService
             _workerDelaySecs = _configuration.GetValue<int>("WorkerDelaySecs");
             _tempFolderPath = _configuration.GetValue<string>("TempFolderPath");
             _sunriseService = sunriseService;
-            _sunriseThresholdMinutes = _configuration.GetValue<int>("SunriseThresholdMinutes");
+            _twilightThresholdMinutes = _configuration.GetValue<int>("TwilightThresholdMinutes");
         }
 
         protected override async Task ExecuteAsync(CancellationToken cancellationToken)
@@ -60,8 +60,9 @@ namespace InternetConsult.WaterLevelPrediction.WorkerService
                     PublishPredictionResults(predictionResults, tagName, cancellationToken);
                                         
                     bool isNight = false;
-                    // sunriseThresholdMinutes is used to control how much before sunset the night mode should start and how much after sunrise the night mode should end.
-                    var sunriseThresholdMinutes = 60;
+                    // twilightThresholdMinutes is used to control how much before twilight end the night mode should start and how much after twilight begin 
+                    // the night mode should end.
+                    var twilightThresholdMinutes = _twilightThresholdMinutes;
 
                     var sunriseResult = _sunriseService.GetSunriseResult();
                     if (sunriseResult.Result.Status == "OK")
@@ -70,11 +71,11 @@ namespace InternetConsult.WaterLevelPrediction.WorkerService
                         var civilTwilightBegin = sunriseResult.Result.Results.CivilTwilightBegin;
                         var civilTwilightEnd = sunriseResult.Result.Results.CivilTwilightEnd;
 
-                        isNight = (dateTimeUtcNow > (civilTwilightEnd.AddMinutes(-sunriseThresholdMinutes)) || dateTimeUtcNow < civilTwilightBegin.AddMinutes(sunriseThresholdMinutes));
+                        isNight = (dateTimeUtcNow > (civilTwilightEnd.AddMinutes(-twilightThresholdMinutes)) || dateTimeUtcNow < civilTwilightBegin.AddMinutes(twilightThresholdMinutes));
                         // Delay until sunrise.
                         if (isNight)
                         {
-                            workerDelaySecs = Convert.ToInt32(CalculateDelayUntilSunrise(dateTimeUtcNow, civilTwilightBegin, sunriseThresholdMinutes));
+                            workerDelaySecs = Convert.ToInt32(CalculateDelayUntilSunrise(dateTimeUtcNow, civilTwilightBegin, twilightThresholdMinutes));
                         }
                     }
                     await Task.Delay(workerDelaySecs * 1000, cancellationToken);
