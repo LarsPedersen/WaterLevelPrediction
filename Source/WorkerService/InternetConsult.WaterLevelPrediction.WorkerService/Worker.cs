@@ -57,7 +57,7 @@ namespace InternetConsult.WaterLevelPrediction.WorkerService
                     if (tagName is null) throw new NullReferenceException("TagName");
 
                     StoreImage(imageBytes, tagName, cancellationToken);
-                    PublishPredictionResults(predictionResults, tagName, cancellationToken);
+                    StorePredictionResults(predictionResults, tagName, cancellationToken);
                                         
                     bool isNight = false;
                     // twilightThresholdMinutes is used to control how much before twilight end the night mode should start and how much after twilight begin 
@@ -104,7 +104,7 @@ namespace InternetConsult.WaterLevelPrediction.WorkerService
             return nightDelay.TotalSeconds;
         }
 
-        private async void PublishPredictionResults(PredictionResults predictionResults, string tagName, CancellationToken cancellationToken)
+        private async void StorePredictionResults(PredictionResults predictionResults, string tagName, CancellationToken cancellationToken)
         {
             var destinationPath = Path.Combine(_tempFolderPath, tagName);
             var dirInfo = Directory.CreateDirectory(destinationPath);
