@@ -12,6 +12,8 @@ using Microsoft.Extensions.Logging;
 using InternetConsult.WaterLevelPrediction.Model;
 using InternetConsult.WaterLevelPrediction.WorkerService.Services;
 using Newtonsoft.Json;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Processing;
 
 namespace InternetConsult.WaterLevelPrediction.WorkerService
 {
@@ -122,6 +124,17 @@ namespace InternetConsult.WaterLevelPrediction.WorkerService
             string filePath = GetFilePath(dirInfo, fileName); 
             await File.WriteAllBytesAsync(filePath, imageBytes, cancellationToken);
             _logger.LogDebug($"Tank image file stored at: '{filePath}'");
+
+            using (Image image = Image.Load(imageBytes))
+{
+                // Crop the given image in place and return it for chaining.
+                // 'x' signifies the current image processing context.
+                image.Mutate(x => x.Crop(new Rectangle(520,70,280,690)));
+                
+                fileName = "TankCropped.jpg";
+                filePath = GetFilePath(dirInfo, fileName);   
+                image.Save(filePath);
+            } // Dispose - releasing memory into a memory pool ready for the next image you wish to process.
         }
 
         private static string GetFilePath(DirectoryInfo dirInfo, string fileName)
