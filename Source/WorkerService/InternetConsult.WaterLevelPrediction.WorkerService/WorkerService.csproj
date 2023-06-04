@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Worker">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>netcoreapp7.0</TargetFramework>
     <UserSecretsId>dotnet-WorkerService-79B4BB54-0130-4DA6-914B-8F95C90124F8</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     <AssemblyName>InternetConsult.WaterLevelPrediction.WorkerService</AssemblyName>
