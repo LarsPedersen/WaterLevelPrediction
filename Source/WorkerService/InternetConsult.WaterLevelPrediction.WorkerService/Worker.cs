@@ -53,8 +53,8 @@ namespace InternetConsult.WaterLevelPrediction.WorkerService
 
                     var predictionResults = await PredictWaterLevel(imageBytes);
                     var maxPredictionResults = predictionResults.Predictions.OrderByDescending(c => c.Probability).FirstOrDefault();
-                    var tagName = maxPredictionResults.TagName.Replace("%", "");
-
+                    var tagName = maxPredictionResults?.TagName.Replace("%", "");
+                    if (tagName is null) throw new NullReferenceException("TagName");
 
                     StoreImage(imageBytes, tagName, cancellationToken);
                     PublishPredictionResults(predictionResults, tagName, cancellationToken);
