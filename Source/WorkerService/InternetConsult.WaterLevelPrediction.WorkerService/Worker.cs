@@ -55,8 +55,8 @@ namespace InternetConsult.WaterLevelPrediction.WorkerService
                     var maxPredictionResults = predictionResults.Predictions.OrderByDescending(c => c.Probability).FirstOrDefault();
                     var tagName = maxPredictionResults.TagName.Replace("%", "");
 
-                    var filePath = await StoreImage(imageBytes, tagName, cancellationToken);
 
+                    StoreImage(imageBytes, tagName, cancellationToken);
                     PublishPredictionResults(predictionResults, tagName, cancellationToken);
                                         
                     bool isNight = false;
@@ -106,16 +106,32 @@ namespace InternetConsult.WaterLevelPrediction.WorkerService
 
         private async void PublishPredictionResults(PredictionResults predictionResults, string tagName, CancellationToken cancellationToken)
         {
-            var destinationPath =Path.Combine(_tempFolderPath, tagName);
+            var destinationPath = Path.Combine(_tempFolderPath, tagName);
             var dirInfo = Directory.CreateDirectory(destinationPath);
             var fileName = "PredictionResults.json";
+            string filePath = GetFilePath(dirInfo, fileName); 
+            await File.WriteAllTextAsync(filePath, JsonConvert.SerializeObject(predictionResults), cancellationToken);
+            _logger.LogDebug($"PredictionResults file stored at: '{filePath}'");
+        }
+
+        private async void StoreImage(byte[] imageBytes, string tagName, CancellationToken cancellationToken)
+        {
+            var destinationPath = Path.Combine(_tempFolderPath, tagName);
+            var dirInfo = Directory.CreateDirectory(destinationPath);
+            var fileName = "Tank.jpg";
+            string filePath = GetFilePath(dirInfo, fileName); 
+            await File.WriteAllBytesAsync(filePath, imageBytes, cancellationToken);
+            _logger.LogDebug($"Tank image file stored at: '{filePath}'");
+        }
+
+        private static string GetFilePath(DirectoryInfo dirInfo, string fileName)
+        {
             var fileExtension = Path.GetExtension(fileName);
             var fileNameWithoutExt = Path.GetFileNameWithoutExtension(fileName);
 
             var fileNameWithDateTimeStamp = (fileNameWithoutExt + DateTime.Now.Date.ToString("yyyyMMdd") + "_" + DateTime.Now.TimeOfDay.ToString("hhmmss"));
             var filePath = $@"{dirInfo.FullName}/{fileNameWithDateTimeStamp}{fileExtension}";
-            await File.WriteAllTextAsync(filePath, JsonConvert.SerializeObject(predictionResults), cancellationToken);
-            _logger.LogDebug($"PredictionResults file stored at: '{filePath}'");
+            return filePath;
         }
 
         async Task<PredictionResults> PredictWaterLevel(byte[] imageBytes)
@@ -131,21 +147,6 @@ namespace InternetConsult.WaterLevelPrediction.WorkerService
             var content = await response.Content.ReadAsStringAsync();
             var predictionResults = JsonConvert.DeserializeObject<PredictionResults>(content);
             return predictionResults;
-        }
-
-        private async Task<string> StoreImage(byte[] imageBytes, string tagName, CancellationToken cancellationToken)
-        {
-            var destinationPath =Path.Combine(_tempFolderPath, tagName);
-            var dirInfo = Directory.CreateDirectory(destinationPath);
-            var fileName = "Tank.jpg";
-            var fileExtension = Path.GetExtension(fileName);
-            var fileNameWithoutExt = Path.GetFileNameWithoutExtension(fileName);
-
-            var fileNameWithDateTimeStamp = (fileNameWithoutExt + DateTime.Now.Date.ToString("yyyy-MM-dd") + "_" + DateTime.Now.TimeOfDay.ToString("hhmmss"));
-            var filePath = $@"{dirInfo.FullName}/{fileNameWithDateTimeStamp}{fileExtension}";
-            await File.WriteAllBytesAsync(filePath, imageBytes, cancellationToken);
-            _logger.LogDebug($"Tank image file stored at: '{filePath}'");
-            return filePath;
         }
 
         private async Task<byte[]> GetImage(CancellationToken cancellationToken)
