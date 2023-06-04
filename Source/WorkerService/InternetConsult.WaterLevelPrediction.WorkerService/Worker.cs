@@ -77,7 +77,7 @@ namespace InternetConsult.WaterLevelPrediction.WorkerService
                             workerDelaySecs = Convert.ToInt32(CalculateDelayUntilSunrise(dateTimeUtcNow, civilTwilightBegin, sunriseThresholdMinutes));
                         }
                     }
-                    await Task.Delay(_workerDelaySecs * 1000, cancellationToken);
+                    await Task.Delay(workerDelaySecs * 1000, cancellationToken);
                     // Back to the configured delay.
                     workerDelaySecs = _workerDelaySecs;
                 }
